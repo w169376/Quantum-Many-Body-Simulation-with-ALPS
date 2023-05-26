@@ -1,35 +1,19 @@
+# Import necessary libraries
+import pyalps
 import numpy as np
-
-# Define the size of the lattice
-L = 10
-
-# Define the coupling constant
-J = 1.0
-
-# Define the temperature
-T = 2.0
-
-# Initialize the lattice with random spins
-lattice = np.random.choice([-1, 1], size=(L, L))
-
-# Define the Hamiltonian
-def hamiltonian(lattice):
-    return -J * np.sum(
-        lattice * (np.roll(lattice, 1, axis=0) + np.roll(lattice, 1, axis=1))
-    )
-
-# Define the Monte Carlo step
-def monte_carlo_step(lattice, beta):
-    for i in range(L):
-        for j in range(L):
-            delta_E = 2 * J * lattice[i, j] * (
-                lattice[(i+1)%L, j] + lattice[i-1, j] +
-                lattice[i, (j+1)%L] + lattice[i, j-1]
-            )
-            if delta_E < 0 or np.random.rand() < np.exp(-beta * delta_E):
-                lattice[i, j] *= -1
-
-# Run the Monte Carlo simulation
-beta = 1.0 / T
-for step in range(10000):
-    monte_carlo_step(lattice, beta)
+import matplotlib.pyplot as plt
+# Define the parameters for your model
+params = pyalps.Parameters()
+params['LATTICE'] = "square lattice"  # Define the lattice type
+params['T'] = 1.0  # Set the temperature
+params['J'] = 1.0  # Set the exchange interaction strength
+params['SWEEPS'] = 10000  # Set the number of Monte Carlo sweeps
+params['THERMALIZATION'] = 1000  # Set the number of thermalization steps
+params['UPDATE'] = "local"  # Set the update method
+params['MODEL'] = "Ising"  # Set the model type
+# Run the simulation
+input_file = pyalps.writeInputFiles('ising',params)  # Write the input file
+res = pyalps.runApplication('spinmc',input_file,Tmin=5,writexml=True)  # Run the Monte Carlo simulation
+# Analyze the results
+data = pyalps.loadMeasurements(pyalps.getResultFiles(prefix='ising'),'|Magnetization|')  # Load the simulation results
+magnetization = np.array([d.y[0] for d in data])  # Extract the magnetization data
